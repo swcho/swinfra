@@ -1,0 +1,103 @@
+
+data:
+  image: ubuntu:12.04
+  volumes:
+    - /swinfra_data/ldap/data:/var/lib/ldap
+    - /swinfra_data/ldap/config:/etc/ldap/slapd.d
+    - /swinfra_data/lam:/var/lib/ldap-account-manager/config
+    - /swinfra_data/mysql:/var/lib/mysql
+  command:
+    - bash
+
+ldap:
+  image: osixia/openldap
+  volumes_from:
+    - data
+  environment:
+    LDAP_ORGANISATION: "My Compagny"
+    LDAP_DOMAIN: "swforge.com"
+    LDAP_ADMIN_PASSWORD: "root"
+    USE_TLS: false
+  ports:
+    - "389:389"
+
+lam:
+  image: aexoti/lam
+  volumes_from:
+    - data
+  links:
+    - ldap
+  ports:
+    - "8000:80"
+
+#mysql:
+#  image: mysql
+#  ports:
+#    - "33306:3306"
+#  volumes_from:
+#    - data
+#  environment:
+#    - MYSQL_ROOT_PASSWORD=root
+
+phabricator:
+  image: yesnault/docker-phabricator
+  ports:
+    - "8001:80"
+  volumes:
+    - /swinfra_data/phabricator/mysql:/var/lib/mysql
+    - /swinfra_data/phabricator/repo:/var/repo
+    - /swinfra_data/phabricator/conf:/opt/phabricator/conf
+
+#postgresql:
+#  image: sameersbn/postgresql:9.1-1
+#  environment:
+#    - DB_USER=redmine
+#    - DB_PASS=phatiphohsukeuwo
+#    - DB_NAME=redmine_production
+#redmine:
+#  image: sameersbn/redmine:3.0.0
+#  links:
+#    - postgresql:postgresql
+#  environment:
+#    - DB_USER=redmine
+#    - DB_PASS=phatiphohsukeuwo
+#    - DB_NAME=redmine_production
+#  ports:
+#    - "10080:80"
+
+
+#############################################
+
+#data:
+#  image: ubuntu:12.04
+#  volumes:
+#    - /data/mysql:/var/lib/mysql
+#
+#redis:
+#  image: redis:latest
+#
+#mysql:
+#  image: mysql:latest
+#  ports:
+#    - 3306
+#  environment:
+#    MYSQL_DATABASE: *****
+#    MYSQL_ROOT_PASSWORD: *****
+#    volumes_from:
+#      - data
+#
+#web:
+#  build: .
+#  dns: 8.8.8.8
+#  command: python manage.py runserver 0.0.0.0:8000
+#  environment:
+#    - DEBUG=True
+#    - PYTHONUNBUFFERED=1
+#  volumes:
+#    - .:/code
+#  ports:
+#    - "8000:8000"
+#  links:
+#    - data
+#    - mysql
+#    - redis
